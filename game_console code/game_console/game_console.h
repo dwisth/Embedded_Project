@@ -142,3 +142,6 @@ byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
 byte writeToPixel(byte row, byte col, byte value) ;
+
+// GLOBAL VARIABLES
+byte clearScreen();

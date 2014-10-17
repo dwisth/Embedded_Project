@@ -13,7 +13,7 @@ DESCRIPTION:
 
 #include "game_console.h" 
 
-//volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_ROWS];
+volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 volatile byte temp_row = 30;
 volatile byte temp_col = 50;
 
@@ -60,25 +60,25 @@ ISR(INT1_vect)
 	if (UP_BUTTON)
 	{
 		temp_row--;
-		writeToPixel(temp_row, temp_col, 1);
+		writeToPixel(temp_row, temp_col, ON);
 	}
 	
 	if (DOWN_BUTTON)
 	{
 		temp_row++;
-		writeToPixel(temp_row, temp_col, 1);
+		writeToPixel(temp_row, temp_col, ON);
 	}
 
 	if (LEFT_BUTTON) 
 	{
 		temp_col--;
-		writeToPixel(temp_row, temp_col, 1);
+		writeToPixel(temp_row, temp_col, ON);
 	}
 
 	if (RIGHT_BUTTON) 
 	{
 		temp_col++;
-		writeToPixel(temp_row, temp_col, 1);
+		writeToPixel(temp_row, temp_col, ON);
 	}
 
 }
@@ -86,13 +86,6 @@ ISR(INT1_vect)
 
 int main(void)
 {
-	//temp_row = 30;
-	//temp_col = 50;
-
-	setup();
-
-/*
-	byte frame_buffer[LCD_MAX_COLS][LCD_MAX_ROWS];
 	// Initialise the frame_buffer to all OFF.
 	byte row, col;
 	for (col=0; col<LCD_MAX_COLS; col++) {
@@ -100,8 +93,12 @@ int main(void)
 			frame_buffer[col][row] = 0;
 		}
 	}
-*/
 	
+
+	setup();
+	clearScreen();
+
+
 }
 
 

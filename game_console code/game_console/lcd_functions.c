@@ -1,11 +1,25 @@
 #include "game_console.h"
 
+// Declare the global variable initialised in the game_console.c file.
+extern byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
+
+byte clearScreen() 
+{
+	byte page, col;
+	for (page=0; page<LCD_MAX_PAGES; page++) {
+		select_page(page);
+		for (col=0; col<LCD_MAX_COLS; col++) {
+			select_column(col);
+			LCD_data_tx(0x00);
+		}
+	}
+}
+
 // Select a page.
 byte select_page(byte page) 
 {
 	// Make sure page is always within bounds.
-	if (page > LCD_MAX_PAGES)
-	{
+	if (page > LCD_MAX_PAGES) {
 		page = LCD_MAX_PAGES-1;
 	}	
 	byte page_cmd_address = LCD_CMD_PAGE | page;
@@ -28,6 +42,7 @@ byte select_column(byte col)
 
 byte writeToPixel(byte row, byte col, byte value) 
 {
+	// Find the pixel location in terms of page and column number.
 	if (col>LCD_MAX_COLS) {
 		col = LCD_MAX_COLS - 1;
 	}
@@ -36,14 +51,15 @@ byte writeToPixel(byte row, byte col, byte value)
 	}
 
 	byte page = row/8;
-	byte pixel = row%8;
+	byte pixel = _BV(row%8);
 
-	// ONLY TURN ON A PIXEL FOR NOW, ADD FRAME BUFFER LATER.
+	// Check the current screen status in frame buffer and add to it.
+	SET(frame_buffer[col][page], pixel, value);
+	
+	// Write the new pixel to the screen.
 	select_page(page);
 	select_column(col);
-	LCD_data_tx(_BV(pixel));
-
-
+	LCD_data_tx(frame_buffer[col][page]);
 
 	return (TRUE);
 }
