@@ -15,7 +15,6 @@ DESCRIPTION:
 #include <avr/pgmspace.h>
 #include <util/delay.h> // For _delay_ms()f
 
-
 #define byte unsigned char 
 
 /*ON OFF*/
@@ -104,9 +103,13 @@ DESCRIPTION:
 
 /* LCD MACROS */
 
+// Disable LCD reset.
+#define LCD_RST_DIR(DIR) SET(DDRB,_BV(PB3), DIR)
+#define LCD_RST_DISABLE SET(PORTB,_BV(PB3), HIGH)
+
 // Chip is selected when CS0 is low.
 #define LCD_CHIP_SELECT_DIR(DIR) SET(DDRB,_BV(PB1), DIR)
-#define LCD_CHIP_SELECT(STATE) SET(PORTB,_BV(PB1),STATE)
+#define LCD_CHIP_SELECT(STATE) SET(PORTB,_BV(PB1),~STATE)
 
 // Chip is selected when CS0 is low.
 #define LCD_CD_DIR(DIR) SET(DDRB,_BV(PB4), DIR)
@@ -119,6 +122,12 @@ DESCRIPTION:
 #define MOSI_DIR(DIR) SET(DDRB,_BV(PB5), DIR)
 #define MOSI_SET(STATE) SET(PORTB,_BV(PB5),STATE)
 
+// LCD Screen constants.
+#define LCD_MAX_PAGES 8
+#define LCD_MAX_COLS 102
+#define LCD_CMD_PAGE 0xB0
+#define LCD_CMD_COL_LSB 0x00
+#define LCD_CMD_COL_MSB 0x10
 
 /* MISC MACROS */
 
@@ -129,4 +138,5 @@ void setup();
 byte LCD_data_tx(byte tx_byte);
 byte LCD_command_tx(byte tx_byte);
 byte LCD_initialise();
-
+byte select_page(byte page);
+byte select_column(byte col);

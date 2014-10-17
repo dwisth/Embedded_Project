@@ -34,7 +34,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0
 
 
 ## Objects that must be built in order to link
-OBJECTS = game_console.o setup.o 
+OBJECTS = game_console.o setup.o lcd_functions.o 
 
 ## Objects explicitly added by the user
 LINKONLYOBJECTS = 
@@ -47,6 +47,9 @@ game_console.o: ../game_console.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 setup.o: ../setup.c
+	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
+
+lcd_functions.o: ../lcd_functions.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c  $<
 
 ##Link

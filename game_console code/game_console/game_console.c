@@ -14,8 +14,10 @@ DESCRIPTION:
 #include "game_console.h" 
 
 // Interrupt Serivce Routine.
+
 ISR(INT1_vect)
 {
+
 	// Software debounce the buttons.
 	_delay_ms(1);
 
@@ -27,6 +29,29 @@ ISR(INT1_vect)
 	{
 		LCD_LED(OFF);
 	}
+
+	if (DOWN_BUTTON)
+	{
+		byte page, col;
+		for (page=0; page<LCD_MAX_PAGES; page++) {
+			select_page(page);
+			for (col=0; col<LCD_MAX_COLS; col++) {
+				select_column(col);
+				LCD_data_tx(0x00);
+			}
+		}
+	} else {
+		byte page, col;
+		for (page=0; page<LCD_MAX_PAGES; page+=1) {
+			select_page(page);
+			for (col=0; col<LCD_MAX_COLS; col+=2) {
+				select_column(col);
+				LCD_data_tx(0xAA);
+			}
+		}
+
+
+	}
 }
 
 
@@ -34,7 +59,29 @@ ISR(INT1_vect)
 
 int main(void)
 {
+	
 	setup();
+/*
+	select_page(3);
+	select_column(50);
+	LCD_data_tx(0xFF);
+
+	select_column(51);
+	LCD_data_tx(0xFF);
+
+	select_column(52);
+	LCD_data_tx(0xFF);
+
+	select_column(53);
+	LCD_data_tx(0xFF);
+
+	select_column(54);
+	LCD_data_tx(0xFF);
+
+	select_column(55);
+	LCD_data_tx(0xFF);
+*/
+	
 
 /*
 	while (TRUE)//Master loop always true so always loop
@@ -49,6 +96,7 @@ int main(void)
 
 	}
 */
+	
 }
 
 // Program structure with interrrupts.
