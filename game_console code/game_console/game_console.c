@@ -13,6 +13,10 @@ DESCRIPTION:
 
 #include "game_console.h" 
 
+//volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_ROWS];
+volatile byte temp_row = 30;
+volatile byte temp_col = 50;
+
 // Interrupt Serivce Routine.
 
 ISR(INT1_vect)
@@ -21,7 +25,7 @@ ISR(INT1_vect)
 	// Software debounce the buttons.
 	_delay_ms(1);
 
-	if (UP_BUTTON)
+	if (ACTION_BUTTON)
 	{
 		LCD_LED(ON);	
 	} 	
@@ -30,7 +34,7 @@ ISR(INT1_vect)
 		LCD_LED(OFF);
 	}
 
-	if (DOWN_BUTTON)
+	if (A_BUTTON)
 	{
 		byte page, col;
 		for (page=0; page<LCD_MAX_PAGES; page++) {
@@ -40,7 +44,9 @@ ISR(INT1_vect)
 				LCD_data_tx(0x00);
 			}
 		}
-	} else {
+	} 
+	
+	if (B_BUTTON) {
 		byte page, col;
 		for (page=0; page<LCD_MAX_PAGES; page+=1) {
 			select_page(page);
@@ -49,55 +55,64 @@ ISR(INT1_vect)
 				LCD_data_tx(0xAA);
 			}
 		}
-
-
 	}
+
+	if (UP_BUTTON)
+	{
+		temp_row--;
+		writeToPixel(temp_row, temp_col, 1);
+	}
+	
+	if (DOWN_BUTTON)
+	{
+		temp_row++;
+		writeToPixel(temp_row, temp_col, 1);
+	}
+
+	if (LEFT_BUTTON) 
+	{
+		temp_col--;
+		writeToPixel(temp_row, temp_col, 1);
+	}
+
+	if (RIGHT_BUTTON) 
+	{
+		temp_col++;
+		writeToPixel(temp_row, temp_col, 1);
+	}
+
 }
-
-
 
 
 int main(void)
 {
-	
+	//temp_row = 30;
+	//temp_col = 50;
+
 	setup();
-/*
-	select_page(3);
-	select_column(50);
-	LCD_data_tx(0xFF);
-
-	select_column(51);
-	LCD_data_tx(0xFF);
-
-	select_column(52);
-	LCD_data_tx(0xFF);
-
-	select_column(53);
-	LCD_data_tx(0xFF);
-
-	select_column(54);
-	LCD_data_tx(0xFF);
-
-	select_column(55);
-	LCD_data_tx(0xFF);
-*/
-	
 
 /*
-	while (TRUE)//Master loop always true so always loop
-	{
-		//GICR_INT1_ENABLE(TRUE);
-		BAT_LOW_LED(ON);
-		_delay_ms(500);	
-		BAT_LOW_LED(OFF);
-		_delay_ms(500);
-		//Turn on the LED if UP_BUTTON is pressed
-		
-
+	byte frame_buffer[LCD_MAX_COLS][LCD_MAX_ROWS];
+	// Initialise the frame_buffer to all OFF.
+	byte row, col;
+	for (col=0; col<LCD_MAX_COLS; col++) {
+		for (row=0; row<LCD_MAX_ROWS; row++) {
+			frame_buffer[col][row] = 0;
+		}
 	}
 */
 	
 }
+
+
+
+
+
+
+
+
+
+
 
 // Program structure with interrrupts.
 /*
@@ -127,4 +142,7 @@ ISR(...) {
 }
 
 */
+
+
+
 

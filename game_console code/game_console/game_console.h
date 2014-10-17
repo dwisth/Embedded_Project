@@ -125,6 +125,7 @@ DESCRIPTION:
 // LCD Screen constants.
 #define LCD_MAX_PAGES 8
 #define LCD_MAX_COLS 102
+#define LCD_MAX_ROWS 64
 #define LCD_CMD_PAGE 0xB0
 #define LCD_CMD_COL_LSB 0x00
 #define LCD_CMD_COL_MSB 0x10
@@ -140,3 +141,4 @@ byte LCD_command_tx(byte tx_byte);
 byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
+byte writeToPixel(byte row, byte col, byte value) ;

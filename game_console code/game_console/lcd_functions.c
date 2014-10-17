@@ -24,7 +24,29 @@ byte select_column(byte col)
 }
 
 // Select a row and column to turn on and off a pixel.
+// Define the origin at the top left corner of the LCD screen. Down is rows, across is columns.
 
+byte writeToPixel(byte row, byte col, byte value) 
+{
+	if (col>LCD_MAX_COLS) {
+		col = LCD_MAX_COLS - 1;
+	}
+	if (row>LCD_MAX_ROWS) {
+		row = LCD_MAX_ROWS - 1;
+	}
+
+	byte page = row/8;
+	byte pixel = row%8;
+
+	// ONLY TURN ON A PIXEL FOR NOW, ADD FRAME BUFFER LATER.
+	select_page(page);
+	select_column(col);
+	LCD_data_tx(_BV(pixel));
+
+
+
+	return (TRUE);
+}
 
 
 // Ideally, the screen automatically refreshes from the frame buffer.
