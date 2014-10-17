@@ -103,14 +103,21 @@ DESCRIPTION:
 #define HOLD_FRAM PD6
 
 /* LCD MACROS */
-#define LCD_CHIP_SELECT
-#define LCD_CHIP_DESELECT
-#define LCD_COMMAND
-#define LCD_DATA
-#define SCK_SET_HIGH
-#define SCK_SET_LOW
-#define MOSI_SET_HIGH
-#define MOSI_SET_LOW
+
+// Chip is selected when CS0 is low.
+#define LCD_CHIP_SELECT_DIR(DIR) SET(DDRB,_BV(PB1), DIR)
+#define LCD_CHIP_SELECT(STATE) SET(PORTB,_BV(PB1),STATE)
+
+// Chip is selected when CS0 is low.
+#define LCD_CD_DIR(DIR) SET(DDRB,_BV(PB4), DIR)
+#define LCD_COMMAND SET(PORTB,_BV(PB4),OFF)
+#define LCD_DATA SET(PORTB,_BV(PB4),ON)
+
+#define SCK_DIR(DIR) SET(DDRB,_BV(PB7), DIR)
+#define SCK_SET(STATE) SET(PORTB,_BV(PB7),STATE)
+
+#define MOSI_DIR(DIR) SET(DDRB,_BV(PB5), DIR)
+#define MOSI_SET(STATE) SET(PORTB,_BV(PB5),STATE)
 
 
 /* MISC MACROS */
@@ -120,5 +127,6 @@ DESCRIPTION:
 
 void setup();
 byte LCD_data_tx(byte tx_byte);
-byte LCD_initialise(void);
+byte LCD_command_tx(byte tx_byte);
+byte LCD_initialise();
 

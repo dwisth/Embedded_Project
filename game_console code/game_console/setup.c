@@ -14,8 +14,14 @@ DESCRIPTION:
 
 void setup() {
 
+	// SPI Intialise
+	LCD_CHIP_SELECT_DIR(OUT);
+	LCD_CD_DIR(OUT);
+	SCK_DIR(OUT);
+	MOSI_DIR(OUT);
+
 	// LCD SCREEN INITIALISATION
-	//LCD_initialise();
+	LCD_initialise();
 
 
 	// LCD LED PWM SETUP
@@ -66,66 +72,67 @@ void setup() {
 	sei();
 }
 
-/*
+
 // Send a data byte to the LCD.
 byte LCD_data_tx(byte tx_byte)
 {
 	byte tx_processed;
 	byte tx_mask = 0x80;
-	LCD_CHIP_SELECT;
+	LCD_CHIP_SELECT(HIGH);
 	LCD_DATA;
 
 	// Manually set the SPI clock low and high for each bit.
 	while (tx_mask != 0x00) 
 	{
 		tx_processed = tx_byte & tx_mask;
-		SCK_SET_HIGH;
+		SCK_SET(HIGH);
 
 		// MOSI - send one bit of data out.
 		if (tx_processed) {
-			MOSI_SET_HIGH;
+			MOSI_SET(HIGH);
 		} else {
-			MOSI_SET_LOW;
+			MOSI_SET(LOW);
 		}
-		SCK_SET_LOW;
+		SCK_SET(LOW);
 		tx_mask>>=1;
 	}
-	SCK_SET_HIGH;
-	LCD_CHIP_DESELECT;
+	SCK_SET(HIGH);
+	LCD_CHIP_SELECT(LOW);
 	return(TRUE);
 
 }
+
 
 // Send a data byte to the LCD.
 byte LCD_command_tx(byte tx_byte)
 {
 	byte tx_processed;
 	byte tx_mask = 0x80;
-	LCD_CHIP_SELECT;
+	LCD_CHIP_SELECT(ON);
 	LCD_COMMAND;
 
 	// Manually set the SPI clock low and high for each bit.
 	while (tx_mask != 0x00) 
 	{
 		tx_processed = tx_byte & tx_mask;
-		SCK_SET_HIGH;
+		SCK_SET(HIGH);
 
 		// MOSI - send one bit of data out.
 		if (tx_processed) {
-			MOSI_SET_HIGH;
+			MOSI_SET(HIGH);
 		} else {
-			MOSI_SET_LOW;
+			MOSI_SET(LOW);
 		}
-		SCK_SET_LOW;
+		SCK_SET(LOW);
 		tx_mask>>=1;
 	}
-	SCK_SET_HIGH;
-	LCD_CHIP_DESELECT;
+	SCK_SET(HIGH);
+	LCD_CHIP_SELECT(LOW);
 	return(TRUE);
 
 }
 
-byte LCD_initialise(void)
+byte LCD_initialise()
 {
 	LCD_command_tx(0x40); // Display start line 0.
 	LCD_command_tx(0xA1); // SEG reverse
@@ -143,5 +150,3 @@ byte LCD_initialise(void)
 	LCD_command_tx(0xAF); // Display ON.
 	return(TRUE);
 }
-
-*/
