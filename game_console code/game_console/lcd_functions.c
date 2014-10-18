@@ -3,6 +3,18 @@
 // Declare the global variable initialised in the game_console.c file.
 extern byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 
+byte clearFrameBuffer()
+{
+	// Initialise the frame_buffer to all OFF.
+	byte row, col;
+	for (col=0; col<LCD_MAX_COLS; col++) {
+		for (row=0; row<LCD_MAX_ROWS; row++) {
+			frame_buffer[col][row] = 0;
+		}
+	}
+	return(TRUE);
+}
+
 byte clearScreen() 
 {
 	byte page, col;

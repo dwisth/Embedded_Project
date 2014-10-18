@@ -70,7 +70,7 @@ DESCRIPTION:
 
 // LCD is active HIGH.
 #define LCD_LED(STATE) SET(PORTD,_BV(PD7),STATE)
-#define BAT_LOW_LED_STATE GET(PIND,_BV(PD7))
+#define LCD_LED_STATE GET(PIND,_BV(PD7))
 
 //Devices Inputs
 #define UP_BUTTON ~GET(PINA,_BV(PA4))
@@ -137,7 +137,7 @@ DESCRIPTION:
 // Make the PWM toggle on compare match.
 #define PWM_SET_UP TCCR2 = (_BV(WGM21)) | (_BV(WGM20)) | (_BV(COM21)) | (_BV(CS20))
 #define PWM_VALUE(VALUE) OCR2 = VALUE
-#define PWM_STEP 64
+#define PWM_STEP 16
 
 
 // Button States
@@ -148,9 +148,24 @@ DESCRIPTION:
 #define BSTATE_A 4
 #define BSTATE_B 5
 #define BSTATE_ACTION 6
-#define BSTATE_LEFT 7
-#define BSTATE_IDLE 8
+#define BSTATE_IDLE 7
 
+// ADC (ADC3 on pin PA3)
+
+// Set up pin.
+#define BAT_VOLTAGE_PIN(DIR) SET(DDRA,_BV(PA3),DIR)
+
+// Internal reference, values Left adjusted, only care about AD3.
+#define ADC_MUX_SETUP ADMUX = _BV(REFS0) | _BV(ADLAR) | _BV(MUX1) | _BV(MUX0)
+// Enable ADC, 
+#define ADC_ADCSRA_SETUP ADCSRA = _BV(ADEN)
+#define ADC_START_CONVERSION ADCSRA |= _BV(ADSC)
+#define ADC_CONVERSION_FINISHED ~(ADCSRA & _BV(ADSC))
+// Only read the MSB, don't worry about last 2 bits.
+// Conversion factor on page 216 of datasheet.
+#define ADC_GET_VALUE ((double)(ADCH<<2))*3.3/1024
+// Volts
+#define LOW_BAT_VOLTAGE 1.1
 
 /* MISC MACROS */
 
@@ -164,6 +179,5 @@ byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
 byte writeToPixel(byte row, byte col, byte value) ;
-
-// GLOBAL VARIABLES
 byte clearScreen();
+byte clearFrameBuffer();

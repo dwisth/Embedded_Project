@@ -11,6 +11,8 @@ DESCRIPTION:
 *************************************************************************/
 
 #include "game_console.h"
+extern byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
+
 
 void setup() {
 
@@ -26,12 +28,13 @@ void setup() {
 	LCD_initialise();
 
 
-	// LCD LED PWM SETUP
-	
-
 	// LCD LED BACKLIGHT PINS
-	LCD_LED(OFF);
+	//LCD_LED(OFF);
 	LCD_LED_DIR(OUT);
+
+	// PWM Initialise
+	PWM_SET_UP;
+	PWM_VALUE(0x0F);
 
 	// LED OUTPUT PINS
 	BAT_LOW_LED(OFF); //Make sure it is off before changing direction
@@ -72,5 +75,12 @@ void setup() {
 	GICR_INT1_ENABLE(TRUE);
 	INT1_LOGIC_CHANGE;
 	sei();
+
+	// ADC
+	BAT_VOLTAGE_PIN(IN);
+	ADC_MUX_SETUP;
+	ADC_ADCSRA_SETUP;
+
+	clearFrameBuffer();
 }
 
