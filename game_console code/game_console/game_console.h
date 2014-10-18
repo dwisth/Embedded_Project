@@ -66,9 +66,11 @@ DESCRIPTION:
 
 // LED is active LOW.
 #define BAT_LOW_LED(STATE) SET(PORTB,_BV(PB0),~STATE)
+#define BAT_LOW_LED_STATE GET(PINB,_BV(PB0))
 
 // LCD is active HIGH.
 #define LCD_LED(STATE) SET(PORTD,_BV(PD7),STATE)
+#define BAT_LOW_LED_STATE GET(PIND,_BV(PD7))
 
 //Devices Inputs
 #define UP_BUTTON ~GET(PINA,_BV(PA4))
@@ -129,6 +131,26 @@ DESCRIPTION:
 #define LCD_CMD_PAGE 0xB0
 #define LCD_CMD_COL_LSB 0x00
 #define LCD_CMD_COL_MSB 0x10
+
+// PWM
+
+// Make the PWM toggle on compare match.
+#define PWM_SET_UP TCCR2 = (_BV(WGM21)) | (_BV(WGM20)) | (_BV(COM21)) | (_BV(CS20))
+#define PWM_VALUE(VALUE) OCR2 = VALUE
+#define PWM_STEP 64
+
+
+// Button States
+#define BSTATE_UP 0
+#define BSTATE_DOWN 1
+#define BSTATE_LEFT 2
+#define BSTATE_RIGHT 3
+#define BSTATE_A 4
+#define BSTATE_B 5
+#define BSTATE_ACTION 6
+#define BSTATE_LEFT 7
+#define BSTATE_IDLE 8
+
 
 /* MISC MACROS */
 

@@ -16,6 +16,8 @@ DESCRIPTION:
 volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 volatile byte temp_row = 30;
 volatile byte temp_col = 50;
+volatile byte pwm_value = 0;
+volatile 
 
 // Interrupt Serivce Routine.
 
@@ -27,12 +29,18 @@ ISR(INT1_vect)
 
 	if (ACTION_BUTTON)
 	{
-		LCD_LED(ON);	
-	} 	
-	else
-	{
-		LCD_LED(OFF);
-	}
+		if (pwm_value == 0x00) {
+			pwm_value = ON;
+		} else if (pwm_value < PWM_STEP) {
+			pwm_value = OFF;
+		} else {
+			pwm_value -= PWM_STEP;
+		}
+		
+		PWM_VALUE(pwm_value);
+	} 
+
+	
 
 	if (A_BUTTON)
 	{
@@ -86,22 +94,9 @@ ISR(INT1_vect)
 
 int main(void)
 {
-	// Initialise the frame_buffer to all OFF.
-	byte row, col;
-	for (col=0; col<LCD_MAX_COLS; col++) {
-		for (row=0; row<LCD_MAX_ROWS; row++) {
-			frame_buffer[col][row] = 0;
-		}
-	}
-	
-
 	setup();
 	clearScreen();
-
-
 }
-
-
 
 
 
