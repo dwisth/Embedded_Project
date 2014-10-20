@@ -13,7 +13,9 @@ DESCRIPTION:
 #include "game_console.h"
 extern byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 
-
+/*
+Function to set up the pins of the ATMEGA and the LCD screen.
+*/
 void setup() {
 
 	// SPI Intialise
@@ -27,26 +29,13 @@ void setup() {
 	LCD_RST_DISABLE;
 	LCD_initialise();
 
-
-	// LCD LED BACKLIGHT PINS
-	//LCD_LED(OFF);
+	// LCD LED PWM Initialise
+	PWM_SET_UP;
 	LCD_LED_DIR(OUT);
 
-	// PWM Initialise
-	PWM_SET_UP;
-	PWM_VALUE(0x0F);
-
-	// LED OUTPUT PINS
+	// BAT LOW LED OUTPUT PINS
 	BAT_LOW_LED(OFF); //Make sure it is off before changing direction
 	BAT_LOW_LED_DIR(OUT); //Set BATTERY LED I/Os as outputs.
-
-	/*
-	OCR2 = 0x7F;	// Set backlight at 50%.
-	// Bit 7, FOC2 = 0 for PWM mode.
-	// Bit 3 & 6 controls the PWM Mode.
-	// Bit 4 & 5 compare match output.
-	TCCR2
-	*/
 
 	// BUTTON INPUT PINS
 	UP_BUTTON_DIR(IN); //Set UP_BUTTON I/Os as input.
@@ -71,16 +60,14 @@ void setup() {
 	ACTION_BUTTON_PU(ON); 
 
 	// ENABLE INTERRUPTS
-
 	GICR_INT1_ENABLE(TRUE);
 	INT1_LOGIC_CHANGE;
 	sei();
 
-	// ADC
+	// SET UP THE ADC.
 	BAT_VOLTAGE_PIN(IN);
 	ADC_MUX_SETUP;
 	ADC_ADCSRA_SETUP;
 
-	clearFrameBuffer();
 }
 

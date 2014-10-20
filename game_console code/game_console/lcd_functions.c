@@ -3,6 +3,9 @@
 // Declare the global variable initialised in the game_console.c file.
 extern byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 
+/*
+	Set all values in the frame buffer array to OFF.
+*/
 byte clearFrameBuffer()
 {
 	// Initialise the frame_buffer to all OFF.
@@ -15,7 +18,10 @@ byte clearFrameBuffer()
 	return(TRUE);
 }
 
-byte clearScreen() 
+/*
+	Turn off all pixels in the screen.
+*/
+void clearScreen() 
 {
 	byte page, col;
 	for (page=0; page<LCD_MAX_PAGES; page++) {
@@ -27,7 +33,23 @@ byte clearScreen()
 	}
 }
 
-// Select a page.
+/*
+	Draw a ON-OFF pattern over the screen.
+*/
+void drawScreenPattern() {
+	byte page, col;
+	for (page=0; page<LCD_MAX_PAGES; page+=1) {
+		select_page(page);
+		for (col=0; col<LCD_MAX_COLS; col+=2) {
+			select_column(col);
+			LCD_data_tx(0xAA|frame_buffer[col][page]);
+		}
+	}
+}
+
+/*
+	Select a page on the LCD.
+*/
 byte select_page(byte page) 
 {
 	// Make sure page is always within bounds.
@@ -39,7 +61,9 @@ byte select_page(byte page)
 	return(TRUE);
 }
 
-// Select a column.
+/*
+	Select a column of the LCD.
+*/
 byte select_column(byte col) 
 {
 	byte col_cmd_address_LSB = LCD_CMD_COL_LSB | (col&0x0F);
@@ -49,9 +73,10 @@ byte select_column(byte col)
 	return TRUE;
 }
 
-// Select a row and column to turn on and off a pixel.
-// Define the origin at the top left corner of the LCD screen. Down is rows, across is columns.
-
+/*
+	Turn ON or OFF a pixel at a certain row and column of the LCD display.
+	Define the origin at the top left corner of the LCD screen. Down is rows, across is columns.
+*/
 byte writeToPixel(byte row, byte col, byte value) 
 {
 	// Find the pixel location in terms of page and column number.
@@ -76,6 +101,9 @@ byte writeToPixel(byte row, byte col, byte value)
 	return(TRUE);
 }
 
+/*
+	Check if the pixel at row,col has already been written to.
+*/
 byte checkForCollision(byte row, byte col) {
 	
 	// Check for valid inputs.
@@ -96,11 +124,9 @@ byte checkForCollision(byte row, byte col) {
 }
 
 
-// Ideally, the screen automatically refreshes from the frame buffer.
-
-
-
-// Send a data byte to the LCD.
+/*
+	Send a data byte to the LCD.
+*/
 byte LCD_data_tx(byte tx_byte)
 {
 	byte tx_processed;
@@ -130,7 +156,9 @@ byte LCD_data_tx(byte tx_byte)
 }
 
 
-// Send a data byte to the LCD.
+/*
+	Send a command byte to the LCD.
+*/
 byte LCD_command_tx(byte tx_byte)
 {
 	byte tx_processed;
@@ -159,13 +187,16 @@ byte LCD_command_tx(byte tx_byte)
 
 }
 
+/*
+	Initialise the LCD display using a sequence defined in the LCD-DOGS 102-6E datasheet.
+*/
 byte LCD_initialise()
 {
 	LCD_command_tx(0x40); // Display start line 0.
 	LCD_command_tx(0xA1); // SEG reverse
 	LCD_command_tx(0xC0); // Normal COM0~COM69
 	LCD_command_tx(0xA4); // Disable -> Set all pixels to ON.
-	LCD_command_tx(0xA6); // Display inverse off.
+	LCD_command_tx(0xA6); // Display inverse off.	
 	_delay_ms(120);
 	LCD_command_tx(0xA2); // LCD bias ratio A2/A3
 	LCD_command_tx(0x2F); // Set power control 28..2F

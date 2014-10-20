@@ -13,63 +13,44 @@ DESCRIPTION:
 
 #include "game_console.h" 
 
+// Declare the global frame_buffer and button_state arrays.
 volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
-volatile byte button_state[7] = {0,0,0,0,0,0,0};
+volatile byte button_state[NUM_BUTTONS] = {0,0,0,0,0,0,0};
 
-// Interrupt Serivce Routine.
-
+/* 
+	Interrupt Serivce Routine.
+	When there is a change in the interrupt pin state the button values are polled.
+*/
 ISR(INT1_vect)
 {
-
 	// Software debounce the buttons.
 	_delay_ms(1);
 
-	button_state[BSTATE_UP] = UP_BUTTON;
-	button_state[BSTATE_DOWN] = DOWN_BUTTON;
-	button_state[BSTATE_LEFT] = LEFT_BUTTON;
-	button_state[BSTATE_RIGHT] = RIGHT_BUTTON;
-	button_state[BSTATE_A] = A_BUTTON;
-	button_state[BSTATE_B] = B_BUTTON;
+	button_state[BSTATE_UP] 	= UP_BUTTON;
+	button_state[BSTATE_DOWN] 	= DOWN_BUTTON;
+	button_state[BSTATE_LEFT] 	= LEFT_BUTTON;
+	button_state[BSTATE_RIGHT] 	= RIGHT_BUTTON;
+	button_state[BSTATE_A] 		= A_BUTTON;
+	button_state[BSTATE_B] 		= B_BUTTON;
 	button_state[BSTATE_ACTION] = ACTION_BUTTON;
-
-/*
-	if (A_BUTTON)
-	{
-		byte page, col;
-		for (page=0; page<LCD_MAX_PAGES; page++) {
-			select_page(page);
-			for (col=0; col<LCD_MAX_COLS; col++) {
-				select_column(col);
-				LCD_data_tx(0x00);
-			}
-		}
-	} 
-	
-	if (B_BUTTON) {
-		byte page, col;
-		for (page=0; page<LCD_MAX_PAGES; page+=1) {
-			select_page(page);
-			for (col=0; col<LCD_MAX_COLS; col+=2) {
-				select_column(col);
-				LCD_data_tx(0xAA);
-			}
-		}
-	}
-*/
 }
 
-
+/*
+	Main function.
+*/
 int main(void)
 {
-	
 	setup();
 	clearScreen();
 	clearFrameBuffer();
 
-	byte local_button_state[7];
+	// Initialise variables.
+	byte local_button_state[NUM_BUTTONS];
 	byte collision_state = FALSE;
 	byte row = INITIAL_CURSOR_ROW, col = INITIAL_CURSOR_COL;
-	byte pwm_value = 0x00;
+	byte pwm_value = OFF;
+	PWM_VALUE(pwm_value);
+	byte screen_inverted = FALSE;
 	
 	// Create a state machine based on the button values.
 	while (TRUE) {
@@ -90,9 +71,21 @@ int main(void)
 			row = INITIAL_CURSOR_ROW;
 			col = INITIAL_CURSOR_COL;
 		} 
-		// BUTTON FUNCTION TO BE ADDED.
+		// INVERT THE LCD DISPLAY.
 		if ( local_button_state[BSTATE_B] ) {
-			// Do nothing for now.
+			if (screen_inverted) {
+				// Uninvert the screen.
+				LCD_command_tx(LCD_CMD_NON_INVERTED); // Display inverse off.
+				screen_inverted = FALSE;
+			} else {
+				LCD_command_tx(LCD_CMD_INVERTED); // Display inverse on.
+				screen_inverted = TRUE;
+			}
+			// Delay for 0.5 seconds otherwise it is too quick for the user to select an option.
+			int delay; //ms
+			for (delay=0; delay<500; delay++) {
+				_delay_ms(1);
+			}
 		} 
 		// CHANGE THE BRIGHTNESS OF THE SCREEN
 		if ( local_button_state[BSTATE_ACTION] ) {
@@ -111,8 +104,10 @@ int main(void)
 
 		// IF COLLISION, GAME HAS BEEN LOST. WAIT UNTIL USER RESET.
 		
-		if (!collision_state) {
-
+		if (collision_state) {
+			// If a collision occured draw a pattern over the screen.
+			drawScreenPattern();
+		} else {
 			// MOVE CURSOR UP.
 			if ( local_button_state[BSTATE_UP] ) {
 				if (row==0) {
@@ -146,7 +141,7 @@ int main(void)
 				}
 			} 
 		
-			// If the cursor has been moved then check for a collision with the previous path.
+			// If the cursor has been moved, check for a collision with the previous path.
 			if (local_button_state[BSTATE_UP] || local_button_state[BSTATE_DOWN] ||
 				local_button_state[BSTATE_LEFT] || local_button_state[BSTATE_RIGHT]) {
 				collision_state = checkForCollision(row,col);
@@ -157,16 +152,23 @@ int main(void)
 }
 
 
-// Functions copies one button state array to another.
-void copyButtonState(byte src[7], byte dst[7]) {
+/*
+	Copies buttons states from global to local array.
+	Only accepts arrays of size NUM_BUTTONS.
+*/
+void copyButtonState(byte src[NUM_BUTTONS], byte dst[NUM_BUTTONS]) 
+{
 	int i;
-	for (i=0; i<7; i++) {
+	for (i=0; i<NUM_BUTTONS; i++) {
 		dst[i] = src[i];
 	}
 }
 
-
-void checkBatVoltage() {
+/*
+	If the battery voltage is less than LOW_BAT_VOLTAGE then turn on the low battery LED.
+*/
+void checkBatVoltage() 
+{
 
 	double adc_value;
 	ADC_START_CONVERSION;

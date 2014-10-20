@@ -34,8 +34,7 @@ DESCRIPTION:
 #define SET(PORT,MASK,VALUE) PORT = ((MASK & VALUE) | (PORT & ~MASK))
 #define GET(PORT,MASK) PORT & MASK
 
-//Devices Direction MACROs
-//#define MULTI_LINES_DIR(DIR) SET(DDR?,(_BV(P?#)|_BV(P?#)|_BV(P?#)),DIR)
+/* SET PIN DIRECTION AND STATE MACROS */
 #define BAT_LOW_LED_DIR(DIR) SET(DDRB,_BV(PB0),DIR)
 #define LCD_LED_DIR(DIR) SET(DDRD,_BV(PD7),DIR)
 
@@ -61,18 +60,8 @@ DESCRIPTION:
 #define ACTION_BUTTON_DIR(DIR) SET(DDRC,_BV(PC0),DIR)
 #define ACTION_BUTTON_PU(STATE) SET(PORTC,_BV(PC0),STATE)
 
-//Devices Outputs
-//#define MULTI_LINES(STATE) SET(DDR?,(_BV(P?#)|_BV(P?#)|_BV(P?#)),DIR)
 
-// LED is active LOW.
-#define BAT_LOW_LED(STATE) SET(PORTB,_BV(PB0),~STATE)
-#define BAT_LOW_LED_STATE GET(PINB,_BV(PB0))
-
-// LCD is active HIGH.
-#define LCD_LED(STATE) SET(PORTD,_BV(PD7),STATE)
-#define LCD_LED_STATE GET(PIND,_BV(PD7))
-
-//Devices Inputs
+// Devices Inputs
 #define UP_BUTTON ~GET(PINA,_BV(PA4))
 #define DOWN_BUTTON ~GET(PINA,_BV(PA7))
 #define LEFT_BUTTON ~GET(PINA,_BV(PA5))
@@ -81,6 +70,14 @@ DESCRIPTION:
 #define B_BUTTON ~GET(PINC,_BV(PC1))
 #define ACTION_BUTTON ~GET(PINC,_BV(PC0))
 
+/* DEFINE LED OUTPUTS */
+
+// LED is active LOW.
+#define BAT_LOW_LED(STATE) SET(PORTB,_BV(PB0),~STATE)
+#define BAT_LOW_LED_STATE GET(PINB,_BV(PB0))
+
+
+/* INTERRUPTS */
 // Interrupts
 #define GICR_INT1_ENABLE(INPUT) GICR |= INPUT<<INT1
 #define GICR_INT2_ENABLE(INPUT) GICR |= INPUT<<INT2
@@ -92,7 +89,7 @@ DESCRIPTION:
 #define INT1_RISING_EDGE MCUCR = 1<<ISC11 | 1<<ISC10;	
 #define INT1_LOGIC_CHANGE MCUCR = 0<<ISC11 | 1<<ISC10;
 
-// SPI Interface.
+/* SET UP SPI INTERFACE */
 #define CS_LCD PB1
 #define CD_LCD PB4
 #define MOSI PB5
@@ -133,6 +130,8 @@ DESCRIPTION:
 #define LCD_CMD_COL_MSB 0x10
 #define INITIAL_CURSOR_ROW 32
 #define INITIAL_CURSOR_COL 51
+#define LCD_CMD_NON_INVERTED 0xA6
+#define LCD_CMD_INVERTED 0xA7
 
 // PWM
 
@@ -141,8 +140,8 @@ DESCRIPTION:
 #define PWM_VALUE(VALUE) OCR2 = VALUE
 #define PWM_STEP 16
 
-
-// Button States
+/* GAME PLAY VARIABLES */
+#define NUM_BUTTONS 7
 #define BSTATE_UP 0
 #define BSTATE_DOWN 1
 #define BSTATE_LEFT 2
@@ -150,10 +149,9 @@ DESCRIPTION:
 #define BSTATE_A 4
 #define BSTATE_B 5
 #define BSTATE_ACTION 6
-#define BSTATE_IDLE 7
 
-// ADC (ADC3 on pin PA3)
 
+/* ADC */
 // Set up pin.
 #define BAT_VOLTAGE_PIN(DIR) SET(DDRA,_BV(PA3),DIR)
 
@@ -166,13 +164,13 @@ DESCRIPTION:
 // Only read the MSB, don't worry about last 2 bits.
 // Conversion factor on page 216 of datasheet.
 #define ADC_GET_VALUE ((double)(ADCH<<2))*3.3/1024
-// Volts
+// Low battery voltage
 #define LOW_BAT_VOLTAGE 1.1
 
-/* MISC MACROS */
 
 
-// FUNCTION DEFINITIONS
+
+/* FUNCTION DEFINITIONS */
 
 void setup();
 byte LCD_data_tx(byte tx_byte);
@@ -181,8 +179,9 @@ byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
 byte writeToPixel(byte row, byte col, byte value) ;
-byte clearScreen();
+void clearScreen();
+void drawScreenPattern();
 byte clearFrameBuffer();
-void copyButtonState(byte src[7], byte dst[7]);
+void copyButtonState(byte src[NUM_BUTTONS], byte dst[NUM_BUTTONS]);
 void checkBatVoltage();
 byte checkForCollision(byte row, byte col);
