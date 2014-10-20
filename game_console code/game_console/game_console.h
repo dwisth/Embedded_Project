@@ -131,6 +131,8 @@ DESCRIPTION:
 #define LCD_CMD_PAGE 0xB0
 #define LCD_CMD_COL_LSB 0x00
 #define LCD_CMD_COL_MSB 0x10
+#define INITIAL_CURSOR_ROW 32
+#define INITIAL_CURSOR_COL 51
 
 // PWM
 
@@ -181,3 +183,6 @@ byte select_column(byte col);
 byte writeToPixel(byte row, byte col, byte value) ;
 byte clearScreen();
 byte clearFrameBuffer();
+void copyButtonState(byte src[7], byte dst[7]);
+void checkBatVoltage();
+byte checkForCollision(byte row, byte col);

@@ -36,7 +36,7 @@ byte select_page(byte page)
 	}	
 	byte page_cmd_address = LCD_CMD_PAGE | page;
 	LCD_command_tx(page_cmd_address);
-	return TRUE;
+	return(TRUE);
 }
 
 // Select a column.
@@ -73,7 +73,26 @@ byte writeToPixel(byte row, byte col, byte value)
 	select_column(col);
 	LCD_data_tx(frame_buffer[col][page]);
 
-	return (TRUE);
+	return(TRUE);
+}
+
+byte checkForCollision(byte row, byte col) {
+	
+	// Check for valid inputs.
+	if (col<0 || col>LCD_MAX_COLS || row<0 || row>LCD_MAX_ROWS) {
+		return (FALSE);
+	}
+	
+	// Check if that pixel has already been written to, according to the frame buffer.
+	byte page = row/8;
+	byte pixel = _BV(row%8);
+
+	if ( frame_buffer[col][page] & pixel ) {
+		return(TRUE);
+	} else {
+		return (FALSE);
+	}
+
 }
 
 

@@ -14,9 +14,6 @@ DESCRIPTION:
 #include "game_console.h" 
 
 volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
-volatile byte temp_row = 30;
-volatile byte temp_col = 50;
-volatile byte pwm_value = 0;
 volatile byte button_state[7] = {0,0,0,0,0,0,0};
 
 // Interrupt Serivce Routine.
@@ -27,13 +24,13 @@ ISR(INT1_vect)
 	// Software debounce the buttons.
 	_delay_ms(1);
 
-	button_state[0] = UP_BUTTON;
-	button_state[1] = DOWN_BUTTON;
-	button_state[2] = LEFT_BUTTON;
-	button_state[3] = RIGHT_BUTTON;
-	button_state[4] = A_BUTTON;
-	button_state[5] = B_BUTTON;
-	button_state[6] = ACTION_BUTTON;
+	button_state[BSTATE_UP] = UP_BUTTON;
+	button_state[BSTATE_DOWN] = DOWN_BUTTON;
+	button_state[BSTATE_LEFT] = LEFT_BUTTON;
+	button_state[BSTATE_RIGHT] = RIGHT_BUTTON;
+	button_state[BSTATE_A] = A_BUTTON;
+	button_state[BSTATE_B] = B_BUTTON;
+	button_state[BSTATE_ACTION] = ACTION_BUTTON;
 
 /*
 	if (A_BUTTON)
@@ -69,48 +66,37 @@ int main(void)
 	clearScreen();
 	clearFrameBuffer();
 
-	double adc_value;
-
+	byte local_button_state[7];
+	byte collision_state = FALSE;
+	byte row = INITIAL_CURSOR_ROW, col = INITIAL_CURSOR_COL;
+	byte pwm_value = 0x00;
+	
+	// Create a state machine based on the button values.
 	while (TRUE) {
-		_delay_ms(200);
+		checkBatVoltage();
 		
-		if ( button_state[0] ) {
-			if (temp_row==0) {
-				temp_row = LCD_MAX_ROWS;
-			} else {
-				temp_row--;
-			}
-		} 
-		if ( button_state[1] ) {
-			if (temp_row == LCD_MAX_ROWS) {
-				temp_row = 0;
-			} else {
-			temp_row++;
-			}
-		} 
-		if ( button_state[2] ) {
-			if (temp_col==0) {
-				temp_col = LCD_MAX_COLS;
-			} else {
-				temp_col--;
-			}
-		} 
-		if ( button_state[3] ) {
-			if (temp_col == LCD_MAX_COLS) {
-				temp_col = 0;
-			} else {
-				temp_col++;
-			}
-		} 
-		if ( button_state[4] ) {
+		// Slow down the game for the user.
+		_delay_ms(200);
+		// Create a local button state variable to avoid bstate changing during one cycle.
+		copyButtonState(button_state, local_button_state);
+
+		/* ADMINISTRATIVE BUTTONS */
+
+		// RESET THE GAME
+		if ( local_button_state[BSTATE_A] ) {
 			clearFrameBuffer();
 			clearScreen();
+			collision_state = FALSE;
+			row = INITIAL_CURSOR_ROW;
+			col = INITIAL_CURSOR_COL;
 		} 
-		if ( button_state[5] ) {
-
+		// BUTTON FUNCTION TO BE ADDED.
+		if ( local_button_state[BSTATE_B] ) {
+			// Do nothing for now.
 		} 
-		if ( button_state[6] ) {
-			if (pwm_value == 0x00) {
+		// CHANGE THE BRIGHTNESS OF THE SCREEN
+		if ( local_button_state[BSTATE_ACTION] ) {
+			if (pwm_value == OFF) {
 				pwm_value = ON;
 			} else if (pwm_value < PWM_STEP) {
 				pwm_value = OFF;
@@ -120,59 +106,77 @@ int main(void)
 		
 			PWM_VALUE(pwm_value);
 		}
-				
-		
-		ADC_START_CONVERSION;
-		while (~ADC_CONVERSION_FINISHED){}
-		adc_value = ADC_GET_VALUE;
 
-		if (adc_value < LOW_BAT_VOLTAGE) {
-			BAT_LOW_LED(ON);
-		} else {
-			BAT_LOW_LED(OFF);
-		}
+		/* GAME PLAY BUTTONS */
+
+		// IF COLLISION, GAME HAS BEEN LOST. WAIT UNTIL USER RESET.
 		
-		writeToPixel(temp_row, temp_col, ON);
+		if (!collision_state) {
+
+			// MOVE CURSOR UP.
+			if ( local_button_state[BSTATE_UP] ) {
+				if (row==0) {
+					row = LCD_MAX_ROWS;
+				} else {
+					row--;
+				}
+			} 
+			// MOVE CURSOR DOWN
+			if ( local_button_state[BSTATE_DOWN] ) {
+				if (row == LCD_MAX_ROWS) {
+					row = 0;
+				} else {
+				row++;
+				}
+			} 
+			// MOVE CURSOR LEFT
+			if ( local_button_state[BSTATE_LEFT] ) {
+				if (col==0) {
+					col = LCD_MAX_COLS;
+				} else {
+					col--;
+				}
+			} 
+			// MOVE CURSOR RIGHT
+			if ( local_button_state[BSTATE_RIGHT] ) {
+				if (col == LCD_MAX_COLS) {
+					col = 0;
+				} else {
+					col++;
+				}
+			} 
+		
+			// If the cursor has been moved then check for a collision with the previous path.
+			if (local_button_state[BSTATE_UP] || local_button_state[BSTATE_DOWN] ||
+				local_button_state[BSTATE_LEFT] || local_button_state[BSTATE_RIGHT]) {
+				collision_state = checkForCollision(row,col);
+			}
+			writeToPixel(row, col, ON);
+		}
 	}
 }
 
 
-
-
-
-
-
-
-
-// Program structure with interrrupts.
-/*
-#define BSTATE_UP 0
-#define BSTATE_DOWN 1
-#define BSTATE_LEFT 2
-#define BSTATE_RIGHT 3
-#define BSTATE_A 4
-#define BSTATE_B 5
-#define BSTATE_ACTION 6
-#define BSTATE_LEFT 7
-#define BSTATE_IDLE 8
-
-static volatile button_state = 0;
-
-For the etch-a-sketch game we need: UDLR, clear and backlight buttons.
-
-static volatile button_state[7];
-ISR(...) {
-	button_state[0] = UP_BUTTON;
-	button_state[1] = DOWN_BUTTON;
-	button_state[2] = LEFT_BUTTON;
-	button_state[3] = RIGHT_BUTTON;
-	button_state[4] = A_BUTTON;
-	button_state[5] = B_BUTTON;
-	button_state[6] = ACTION_BUTTON;
+// Functions copies one button state array to another.
+void copyButtonState(byte src[7], byte dst[7]) {
+	int i;
+	for (i=0; i<7; i++) {
+		dst[i] = src[i];
+	}
 }
 
-*/
 
+void checkBatVoltage() {
 
+	double adc_value;
+	ADC_START_CONVERSION;
+	while (~ADC_CONVERSION_FINISHED){}
+	adc_value = ADC_GET_VALUE;
 
-
+	// Turn ON the battery low LED if the battery voltage is less than 1.1V.
+	if (adc_value < LOW_BAT_VOLTAGE) {
+		BAT_LOW_LED(ON);
+	} else {
+		BAT_LOW_LED(OFF);
+	}
+}
