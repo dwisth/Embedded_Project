@@ -34,60 +34,74 @@ DESCRIPTION:
 #define SET(PORT,MASK,VALUE) PORT = ((MASK & VALUE) | (PORT & ~MASK))
 #define GET(PORT,MASK) PORT & MASK
 
-/* SET PIN DIRECTION AND STATE MACROS */
-#define BAT_LOW_LED_DIR(DIR) SET(DDRB,_BV(PB0),DIR)
-#define LCD_LED_DIR(DIR) SET(DDRD,_BV(PD7),DIR)
 
-// BUTTON MACROS
-#define UP_BUTTON_DIR(DIR) SET(DDRA,_BV(PA4),DIR)
-#define UP_BUTTON_PU(STATE) SET(PORTA,_BV(PA4),STATE)
+/* BUTTONS */
 
-#define DOWN_BUTTON_DIR(DIR) SET(DDRA,_BV(PA7),DIR)
-#define DOWN_BUTTON_PU(STATE) SET(PORTA,_BV(PA7),STATE)
+// DIRN macros
+#define UP_BUTTON_DIR(DIR) 		SET(DDRA,_BV(PA4),DIR)
+#define DOWN_BUTTON_DIR(DIR) 	SET(DDRA,_BV(PA7),DIR)
+#define LEFT_BUTTON_DIR(DIR) 	SET(DDRA,_BV(PA5),DIR)
+#define RIGHT_BUTTON_DIR(DIR) 	SET(DDRA,_BV(PA6),DIR)
+#define A_BUTTON_DIR(DIR) 		SET(DDRC,_BV(PC6),DIR)
+#define B_BUTTON_DIR(DIR) 		SET(DDRC,_BV(PC1),DIR)
+#define ACTION_BUTTON_DIR(DIR) 	SET(DDRC,_BV(PC0),DIR)
 
-#define LEFT_BUTTON_DIR(DIR) SET(DDRA,_BV(PA5),DIR)
-#define LEFT_BUTTON_PU(STATE) SET(PORTA,_BV(PA5),STATE)
+// SET macros
+#define UP_BUTTON_PU(STATE) 		SET(PORTA,_BV(PA4),STATE)
+#define DOWN_BUTTON_PU(STATE) 		SET(PORTA,_BV(PA7),STATE)
+#define LEFT_BUTTON_PU(STATE) 		SET(PORTA,_BV(PA5),STATE)
+#define RIGHT_BUTTON_PU(STATE) 		SET(PORTA,_BV(PA6),STATE)
+#define A_BUTTON_PU(STATE) 			SET(PORTC,_BV(PC6),STATE)
+#define B_BUTTON_PU(STATE) 			SET(PORTC,_BV(PC1),STATE)
+#define ACTION_BUTTON_PU(STATE) 	SET(PORTC,_BV(PC0),STATE)
 
-#define RIGHT_BUTTON_DIR(DIR) SET(DDRA,_BV(PA6),DIR)
-#define RIGHT_BUTTON_PU(STATE) SET(PORTA,_BV(PA6),STATE)
-
-#define A_BUTTON_DIR(DIR) SET(DDRC,_BV(PC6),DIR)
-#define A_BUTTON_PU(STATE) SET(PORTC,_BV(PC6),STATE)
-
-#define B_BUTTON_DIR(DIR) SET(DDRC,_BV(PC1),DIR)
-#define B_BUTTON_PU(STATE) SET(PORTC,_BV(PC1),STATE)
-
-#define ACTION_BUTTON_DIR(DIR) SET(DDRC,_BV(PC0),DIR)
-#define ACTION_BUTTON_PU(STATE) SET(PORTC,_BV(PC0),STATE)
+// GET macros (buttons are active low)
+#define UP_BUTTON 			~GET(PINA,_BV(PA4))
+#define DOWN_BUTTON 		~GET(PINA,_BV(PA7))
+#define LEFT_BUTTON 		~GET(PINA,_BV(PA5))
+#define RIGHT_BUTTON 		~GET(PINA,_BV(PA6))
+#define A_BUTTON 			~GET(PINC,_BV(PC6))
+#define B_BUTTON 			~GET(PINC,_BV(PC1))
+#define ACTION_BUTTON 		~GET(PINC,_BV(PC0))
 
 
-// Devices Inputs
-#define UP_BUTTON ~GET(PINA,_BV(PA4))
-#define DOWN_BUTTON ~GET(PINA,_BV(PA7))
-#define LEFT_BUTTON ~GET(PINA,_BV(PA5))
-#define RIGHT_BUTTON ~GET(PINA,_BV(PA6))
-#define A_BUTTON ~GET(PINC,_BV(PC6))
-#define B_BUTTON ~GET(PINC,_BV(PC1))
-#define ACTION_BUTTON ~GET(PINC,_BV(PC0))
-
-/* DEFINE LED OUTPUTS */
+/* BATTERY LOW LED */
 
 // LED is active LOW.
-#define BAT_LOW_LED(STATE) SET(PORTB,_BV(PB0),~STATE)
-#define BAT_LOW_LED_STATE GET(PINB,_BV(PB0))
+#define BAT_LOW_LED_DIR(DIR) 	SET(DDRB,_BV(PB0),DIR)
+#define BAT_LOW_LED(STATE) 		SET(PORTB,_BV(PB0),~STATE) 
+#define BAT_LOW_LED_STATE 	GET(PINB,_BV(PB0))
 
 
 /* INTERRUPTS */
-// Interrupts
-#define GICR_INT1_ENABLE(INPUT) GICR |= INPUT<<INT1
-#define GICR_INT2_ENABLE(INPUT) GICR |= INPUT<<INT2
-#define GIFR_INT1_ENABLE(INPUT) GIFR |= INPUT<<INTF1
-#define GIFR_INT2_ENABLE(INPUT) GIFR |= INPUT<<INTF2
-// Trigger INT1 on any logic change.
+
+// External Interrupts
+#define GICR_INT1_ENABLE SET(GICR, _BV(INT1), ON)
 //http://www.avr-tutorials.com/interrupts/The-AVR-8-Bits-Microcontrollers-External-Interrupts
-//#define INT0_RISING_EDGE MCUCR = 1<<ISC11 | 1<<ISC10;
 #define INT1_RISING_EDGE MCUCR = 1<<ISC11 | 1<<ISC10;	
-#define INT1_LOGIC_CHANGE MCUCR = 0<<ISC11 | 1<<ISC10;
+#define INT1_ANY_LOGIC_CHANGE MCUCR = 0<<ISC11 | 1<<ISC10;
+
+// Timer Interrupts - for screen refreshing
+
+// Disable PWM output, set CLK divider at 256 in normal mode.
+#define TIMER_INT_ENABLE SET(TIMSK, _BV(TOIE0), ON)
+#define TIMER_INT_BEGIN SET(TCCR0, _BV(CS02), ON)
+
+
+//TIFR (holds flags)
+//TIMSK (int mask register).
+//OCR0 --> sets OC interrupt.
+
+
+/* PWM */
+
+// Make the PWM toggle on compare match.
+#define LCD_LED_DIR(DIR) 	SET(DDRD,_BV(PD7),DIR)
+#define PWM_SET_UP 			SET(TCCR2,(_BV(WGM21)) | (_BV(WGM20)) | (_BV(COM21)) | (_BV(CS20)), ON)
+#define PWM_VALUE(VALUE) 	OCR2 = VALUE
+#define PWM_STEP 			16
+
+
 
 /* SET UP SPI INTERFACE */
 #define CS_LCD PB1
@@ -99,6 +113,7 @@ DESCRIPTION:
 #define WP_FRAM PD4
 #define CS_FRAM PD5
 #define HOLD_FRAM PD6
+
 
 /* LCD MACROS */
 
@@ -133,12 +148,6 @@ DESCRIPTION:
 #define LCD_CMD_NON_INVERTED 0xA6
 #define LCD_CMD_INVERTED 0xA7
 
-// PWM
-
-// Make the PWM toggle on compare match.
-#define PWM_SET_UP TCCR2 = (_BV(WGM21)) | (_BV(WGM20)) | (_BV(COM21)) | (_BV(CS20))
-#define PWM_VALUE(VALUE) OCR2 = VALUE
-#define PWM_STEP 16
 
 /* GAME PLAY VARIABLES */
 #define NUM_BUTTONS 7
@@ -186,9 +195,10 @@ byte LCD_command_tx(byte tx_byte);
 byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
-byte writeToPixel(byte row, byte col, byte value) ;
+byte addPixelToFrameBuffer(byte row, byte col, byte value) ;
 void clearScreen();
 void drawScreenPattern();
+void drawFrameBuffer();
 byte clearFrameBuffer();
 void copyButtonState(byte src[NUM_BUTTONS], byte dst[NUM_BUTTONS]);
 void checkBatVoltage();

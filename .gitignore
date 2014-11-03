@@ -217,3 +217,9 @@ pip-log.txt
 
 
 default/
+game_console code/game_console/default/game_console.elf
+*.elf
+*.hex
+*.o
+*.o
+*.o

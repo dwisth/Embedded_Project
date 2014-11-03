@@ -36,13 +36,26 @@ void clearScreen()
 /*
 	Draw a ON-OFF pattern over the screen.
 */
-void drawScreenPattern() {
+void drawScreenPattern() 
+{
 	byte page, col;
 	for (page=0; page<LCD_MAX_PAGES; page+=1) {
 		select_page(page);
 		for (col=0; col<LCD_MAX_COLS; col+=2) {
 			select_column(col);
 			LCD_data_tx(0xAA|frame_buffer[col][page]);
+		}
+	}
+}
+
+void drawFrameBuffer() 
+{
+	byte page, col;
+	for (page=0; page<LCD_MAX_PAGES; page+=1) {
+		select_page(page);
+		for (col=0; col<LCD_MAX_COLS; col+=2) {
+			select_column(col);
+			LCD_data_tx(frame_buffer[col][page]);
 		}
 	}
 }
@@ -77,7 +90,7 @@ byte select_column(byte col)
 	Turn ON or OFF a pixel at a certain row and column of the LCD display.
 	Define the origin at the top left corner of the LCD screen. Down is rows, across is columns.
 */
-byte writeToPixel(byte row, byte col, byte value) 
+byte addPixelToFrameBuffer(byte row, byte col, byte value) 
 {
 	// Find the pixel location in terms of page and column number.
 	if (col>LCD_MAX_COLS) {
@@ -92,11 +105,6 @@ byte writeToPixel(byte row, byte col, byte value)
 
 	// Check the current screen status in frame buffer and add to it.
 	SET(frame_buffer[col][page], pixel, value);
-	
-	// Write the new pixel to the screen.
-	select_page(page);
-	select_column(col);
-	LCD_data_tx(frame_buffer[col][page]);
 
 	return(TRUE);
 }

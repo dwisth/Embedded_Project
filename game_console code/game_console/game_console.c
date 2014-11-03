@@ -19,34 +19,40 @@ volatile byte button_state[NUM_BUTTONS] = {0,0,0,0,0,0,0};
 volatile byte game_state = GAME_STATE_IDLE;
 
 /* 
-	Interrupt Serivce Routine.
-	When there is a change in the interrupt pin state the button values are polled.
+	External Interrupt method.
+	Update the game state when the button state changes.
 */
 ISR(INT1_vect)
 {
 	// Software debounce the buttons.
 	_delay_ms(1);
 
-	if (UP_BUTTON) {
-		button_state[BSTATE_UP] = TRUE;
-		game_state = GAME_STATE_UP;
-	}
-	if (DOWN_BUTTON) {
-		button_state[BSTATE_DOWN] = TRUE;
-		game_state = GAME_STATE_DOWN;
-	}
-	if (LEFT_BUTTON) {
-		button_state[BSTATE_LEFT] = TRUE;
-		game_state = GAME_STATE_LEFT;
-	}
-	if (RIGHT_BUTTON) {
-		button_state[BSTATE_RIGHT] = TRUE;
-		game_state = GAME_STATE_RIGHT;
-	}
+	button_state[BSTATE_UP]		= UP_BUTTON;
+	button_state[BSTATE_DOWN] 	= DOWN_BUTTON;
+	button_state[BSTATE_LEFT] 	= LEFT_BUTTON;
+	button_state[BSTATE_RIGHT] 	= RIGHT_BUTTON;
 	button_state[BSTATE_A] 		= A_BUTTON;
 	button_state[BSTATE_B] 		= B_BUTTON;
 	button_state[BSTATE_ACTION] = ACTION_BUTTON;
+
+	if (button_state[BSTATE_UP]) {
+		game_state = GAME_STATE_UP;
+	}
+	else if (button_state[BSTATE_DOWN]) {
+		game_state = GAME_STATE_DOWN;
+	}
+	else if (button_state[BSTATE_LEFT]) {
+		game_state = GAME_STATE_LEFT;
+	}
+	else if (button_state[BSTATE_RIGHT]) {
+		game_state = GAME_STATE_RIGHT;
+	}
 }
+
+ISR(TIMER0_OVF_vect) {
+	//drawFrameBuffer();
+}
+
 
 /*
 	Main function.
@@ -95,6 +101,7 @@ int main(void)
 				LCD_command_tx(LCD_CMD_INVERTED); // Display inverse on.
 				screen_inverted = TRUE;
 			}
+			_delay_ms(GAME_LOOP_DELAY);
 			_delay_ms(GAME_LOOP_DELAY);
 		} 
 		// CHANGE THE BRIGHTNESS OF THE SCREEN
@@ -155,7 +162,7 @@ int main(void)
 			if ( game_state != GAME_STATE_IDLE ) {
 				collision_state = checkForCollision(row,col);
 			}
-			writeToPixel(row, col, ON);
+			addPixelToFrameBuffer(row, col, ON);
 		}
 	}
 }
