@@ -151,6 +151,14 @@ DESCRIPTION:
 #define BSTATE_ACTION 6
 
 
+#define GAME_STATE_IDLE 0
+#define GAME_STATE_UP 1
+#define GAME_STATE_DOWN 2
+#define GAME_STATE_LEFT 3
+#define GAME_STATE_RIGHT 4
+
+#define GAME_LOOP_DELAY 200
+
 /* ADC */
 // Set up pin.
 #define BAT_VOLTAGE_PIN(DIR) SET(DDRA,_BV(PA3),DIR)

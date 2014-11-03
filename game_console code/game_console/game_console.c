@@ -16,6 +16,7 @@ DESCRIPTION:
 // Declare the global frame_buffer and button_state arrays.
 volatile byte frame_buffer[LCD_MAX_COLS][LCD_MAX_PAGES];
 volatile byte button_state[NUM_BUTTONS] = {0,0,0,0,0,0,0};
+volatile byte game_state = GAME_STATE_IDLE;
 
 /* 
 	Interrupt Serivce Routine.
@@ -26,10 +27,22 @@ ISR(INT1_vect)
 	// Software debounce the buttons.
 	_delay_ms(1);
 
-	button_state[BSTATE_UP] 	= UP_BUTTON;
-	button_state[BSTATE_DOWN] 	= DOWN_BUTTON;
-	button_state[BSTATE_LEFT] 	= LEFT_BUTTON;
-	button_state[BSTATE_RIGHT] 	= RIGHT_BUTTON;
+	if (UP_BUTTON) {
+		button_state[BSTATE_UP] = TRUE;
+		game_state = GAME_STATE_UP;
+	}
+	if (DOWN_BUTTON) {
+		button_state[BSTATE_DOWN] = TRUE;
+		game_state = GAME_STATE_DOWN;
+	}
+	if (LEFT_BUTTON) {
+		button_state[BSTATE_LEFT] = TRUE;
+		game_state = GAME_STATE_LEFT;
+	}
+	if (RIGHT_BUTTON) {
+		button_state[BSTATE_RIGHT] = TRUE;
+		game_state = GAME_STATE_RIGHT;
+	}
 	button_state[BSTATE_A] 		= A_BUTTON;
 	button_state[BSTATE_B] 		= B_BUTTON;
 	button_state[BSTATE_ACTION] = ACTION_BUTTON;
@@ -57,7 +70,7 @@ int main(void)
 		checkBatVoltage();
 		
 		// Slow down the game for the user.
-		_delay_ms(200);
+		_delay_ms(GAME_LOOP_DELAY);
 		// Create a local button state variable to avoid bstate changing during one cycle.
 		copyButtonState(button_state, local_button_state);
 
@@ -70,6 +83,7 @@ int main(void)
 			collision_state = FALSE;
 			row = INITIAL_CURSOR_ROW;
 			col = INITIAL_CURSOR_COL;
+			game_state = GAME_STATE_IDLE;
 		} 
 		// INVERT THE LCD DISPLAY.
 		if ( local_button_state[BSTATE_B] ) {
@@ -81,11 +95,7 @@ int main(void)
 				LCD_command_tx(LCD_CMD_INVERTED); // Display inverse on.
 				screen_inverted = TRUE;
 			}
-			// Delay for 0.5 seconds otherwise it is too quick for the user to select an option.
-			int delay; //ms
-			for (delay=0; delay<500; delay++) {
-				_delay_ms(1);
-			}
+			_delay_ms(GAME_LOOP_DELAY);
 		} 
 		// CHANGE THE BRIGHTNESS OF THE SCREEN
 		if ( local_button_state[BSTATE_ACTION] ) {
@@ -109,7 +119,7 @@ int main(void)
 			drawScreenPattern();
 		} else {
 			// MOVE CURSOR UP.
-			if ( local_button_state[BSTATE_UP] ) {
+			if ( game_state == GAME_STATE_UP ) {
 				if (row==0) {
 					row = LCD_MAX_ROWS;
 				} else {
@@ -117,7 +127,7 @@ int main(void)
 				}
 			} 
 			// MOVE CURSOR DOWN
-			if ( local_button_state[BSTATE_DOWN] ) {
+			if ( game_state == GAME_STATE_DOWN ) {
 				if (row == LCD_MAX_ROWS) {
 					row = 0;
 				} else {
@@ -125,7 +135,7 @@ int main(void)
 				}
 			} 
 			// MOVE CURSOR LEFT
-			if ( local_button_state[BSTATE_LEFT] ) {
+			if ( game_state == GAME_STATE_LEFT ) {
 				if (col==0) {
 					col = LCD_MAX_COLS;
 				} else {
@@ -133,7 +143,7 @@ int main(void)
 				}
 			} 
 			// MOVE CURSOR RIGHT
-			if ( local_button_state[BSTATE_RIGHT] ) {
+			if ( game_state == GAME_STATE_RIGHT ) {
 				if (col == LCD_MAX_COLS) {
 					col = 0;
 				} else {
@@ -142,8 +152,7 @@ int main(void)
 			} 
 		
 			// If the cursor has been moved, check for a collision with the previous path.
-			if (local_button_state[BSTATE_UP] || local_button_state[BSTATE_DOWN] ||
-				local_button_state[BSTATE_LEFT] || local_button_state[BSTATE_RIGHT]) {
+			if ( game_state != GAME_STATE_IDLE ) {
 				collision_state = checkForCollision(row,col);
 			}
 			writeToPixel(row, col, ON);
