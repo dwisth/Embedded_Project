@@ -51,9 +51,9 @@ void drawScreenPattern()
 void drawFrameBuffer() 
 {
 	byte page, col;
-	for (page=0; page<LCD_MAX_PAGES; page+=1) {
+	for (page=0; page<LCD_MAX_PAGES; page++) {
 		select_page(page);
-		for (col=0; col<LCD_MAX_COLS; col+=2) {
+		for (col=0; col<LCD_MAX_COLS; col++) {
 			select_column(col);
 			LCD_data_tx(frame_buffer[col][page]);
 		}
@@ -135,11 +135,11 @@ byte checkForCollision(byte row, byte col) {
 /*
 	Send a data byte to the LCD.
 */
-byte LCD_data_tx(byte tx_byte)
+byte LCD_data_tx_bit_bash(byte tx_byte)
 {
 	byte tx_processed;
 	byte tx_mask = 0x80;
-	LCD_CHIP_SELECT(HIGH);
+	LCD_CS_SET(HIGH);
 	LCD_DATA;
 
 	// Manually set the SPI clock low and high for each bit.
@@ -158,20 +158,40 @@ byte LCD_data_tx(byte tx_byte)
 		tx_mask>>=1;
 	}
 	SCK_SET(HIGH);
-	LCD_CHIP_SELECT(LOW);
+	LCD_CS_SET(LOW);
 	return(TRUE);
-
 }
 
+byte LCD_data_tx(byte tx_byte) {
+
+	LCD_CS_SET(HIGH);
+	LCD_DATA;
+	SPI_SEND_DATA(tx_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	LCD_CS_SET(LOW);
+
+	return TRUE;
+}
 
 /*
 	Send a command byte to the LCD.
 */
 byte LCD_command_tx(byte tx_byte)
 {
+	LCD_CS_SET(HIGH);
+	LCD_COMMAND;
+	SPI_SEND_DATA(tx_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	LCD_CS_SET(LOW);
+
+	return TRUE;
+}
+
+byte LCD_command_tx_bit_bash(byte tx_byte)
+{
 	byte tx_processed;
 	byte tx_mask = 0x80;
-	LCD_CHIP_SELECT(HIGH);
+	LCD_CS_SET(HIGH);
 	LCD_COMMAND;
 
 	// Manually set the SPI clock low and high for each bit.
@@ -190,7 +210,7 @@ byte LCD_command_tx(byte tx_byte)
 		tx_mask>>=1;
 	}
 	SCK_SET(HIGH);
-	LCD_CHIP_SELECT(LOW);
+	LCD_CS_SET(LOW);
 	return(TRUE);
 
 }

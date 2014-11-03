@@ -20,13 +20,16 @@ void setup() {
 
 	// SPI Intialise
 	LCD_RST_DIR(OUT);
-	LCD_CHIP_SELECT_DIR(OUT);
+	LCD_CS_DIR(OUT);
 	LCD_CD_DIR(OUT);
 	SCK_DIR(OUT);
 	MOSI_DIR(OUT);
+	MISO_DIR(IN);
+
+	SPI_ENABLE;
 
 	// LCD SCREEN INITIALISATION
-	LCD_RST_DISABLE;
+	LCD_RST_SET(OFF);
 	LCD_initialise();
 
 	// LCD LED PWM Initialise

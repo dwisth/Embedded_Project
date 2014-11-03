@@ -17,7 +17,7 @@ DESCRIPTION:
 
 #define byte unsigned char 
 
-/*ON OFF*/
+/* ON OFF */
 #define ON 0xFF
 #define OFF 0x00
 #define HIGH 0xFF
@@ -30,7 +30,7 @@ DESCRIPTION:
 #define FORWARD 0x00
 #define BACK 0xFF
 
-/*SET and GET MACRO*/
+/* SET and GET MACROS */
 #define SET(PORT,MASK,VALUE) PORT = ((MASK & VALUE) | (PORT & ~MASK))
 #define GET(PORT,MASK) PORT & MASK
 
@@ -70,7 +70,7 @@ DESCRIPTION:
 // LED is active LOW.
 #define BAT_LOW_LED_DIR(DIR) 	SET(DDRB,_BV(PB0),DIR)
 #define BAT_LOW_LED(STATE) 		SET(PORTB,_BV(PB0),~STATE) 
-#define BAT_LOW_LED_STATE 	GET(PINB,_BV(PB0))
+#define BAT_LOW_LED_STATE 		GET(PINB,_BV(PB0))
 
 
 /* INTERRUPTS */
@@ -85,13 +85,9 @@ DESCRIPTION:
 
 // Disable PWM output, set CLK divider at 256 in normal mode.
 #define TIMER_INT_ENABLE SET(TIMSK, _BV(TOIE0), ON)
-#define TIMER_INT_BEGIN SET(TCCR0, _BV(CS02), ON)
-
-
-//TIFR (holds flags)
-//TIMSK (int mask register).
-//OCR0 --> sets OC interrupt.
-
+//#define TIMER_INT_BEGIN SET(TCCR0, _BV(CS02), ON)
+// Divider at 1024.
+#define TIMER_INT_BEGIN SET(TCCR0, (_BV(CS02)|_BV(CS00)), ON)
 
 /* PWM */
 
@@ -101,9 +97,9 @@ DESCRIPTION:
 #define PWM_VALUE(VALUE) 	OCR2 = VALUE
 #define PWM_STEP 			16
 
-
-
 /* SET UP SPI INTERFACE */
+
+/*
 #define CS_LCD PB1
 #define CD_LCD PB4
 #define MOSI PB5
@@ -113,28 +109,37 @@ DESCRIPTION:
 #define WP_FRAM PD4
 #define CS_FRAM PD5
 #define HOLD_FRAM PD6
+*/
+
+// Pin directions
+#define LCD_CS_DIR(DIR) 	SET(DDRB,_BV(PB1), DIR)
+#define LCD_CD_DIR(DIR) 	SET(DDRB,_BV(PB4), DIR)
+#define LCD_RST_DIR(DIR) 	SET(DDRB,_BV(PB3), DIR)
+#define FRAM_WP_DIR(DIR)	SET(DDRD,_BV(PD4), DIR)
+#define FRAM_CS_DIR(DIR)	SET(DDRD,_BV(PD5), DIR)
+#define FRAM_HOLD_DIR(DIR)	SET(DDRD,_BV(PD6), DIR)
+#define SCK_DIR(DIR) 		SET(DDRB,_BV(PB7), DIR)
+#define MOSI_DIR(DIR)	 	SET(DDRB,_BV(PB5), DIR)
+#define MISO_DIR(DIR)	 	SET(DDRB,_BV(PB6), DIR)
+
+// Pin states
+#define LCD_CS_SET(STATE) 		SET(PORTB,_BV(PB1),~STATE)
+#define LCD_COMMAND 			SET(PORTB,_BV(PB4),OFF)
+#define LCD_DATA				SET(PORTB,_BV(PB4),ON)
+#define FRAM_WP_SET(STATE) 		SET(PORTD,_BV(PD4),~STATE)
+#define FRAM_CS_SET(STATE) 		SET(PORTD,_BV(PD5),~STATE)
+#define FRAM_HOLD_SET(STATE) 	SET(PORTD,_BV(PD6),~STATE)
+#define SCK_SET(STATE) 			SET(PORTB,_BV(PB7),STATE)
+#define MOSI_SET(STATE) 		SET(PORTB,_BV(PB5),STATE)
+#define LCD_RST_SET(STATE) 		SET(PORTB,_BV(PB3),~STATE)
+
+// Enable the SPI bus as master with fastest clock rate.
+#define SPI_ENABLE  			SET(SPCR,( _BV(SPE)|_BV(MSTR) ),ON)
+#define SPI_SEND_DATA(DATA)		SPDR = DATA
+#define SPI_SEND_DATA_COMPLETE 	(SPSR & _BV(SPIF))
 
 
 /* LCD MACROS */
-
-// Disable LCD reset.
-#define LCD_RST_DIR(DIR) SET(DDRB,_BV(PB3), DIR)
-#define LCD_RST_DISABLE SET(PORTB,_BV(PB3), HIGH)
-
-// Chip is selected when CS0 is low.
-#define LCD_CHIP_SELECT_DIR(DIR) SET(DDRB,_BV(PB1), DIR)
-#define LCD_CHIP_SELECT(STATE) SET(PORTB,_BV(PB1),~STATE)
-
-// Chip is selected when CS0 is low.
-#define LCD_CD_DIR(DIR) SET(DDRB,_BV(PB4), DIR)
-#define LCD_COMMAND SET(PORTB,_BV(PB4),OFF)
-#define LCD_DATA SET(PORTB,_BV(PB4),ON)
-
-#define SCK_DIR(DIR) SET(DDRB,_BV(PB7), DIR)
-#define SCK_SET(STATE) SET(PORTB,_BV(PB7),STATE)
-
-#define MOSI_DIR(DIR) SET(DDRB,_BV(PB5), DIR)
-#define MOSI_SET(STATE) SET(PORTB,_BV(PB5),STATE)
 
 // LCD Screen constants.
 #define LCD_MAX_PAGES 8
@@ -191,7 +196,9 @@ DESCRIPTION:
 
 void setup();
 byte LCD_data_tx(byte tx_byte);
+byte LCD_data_tx_bit_bash(byte tx_byte);
 byte LCD_command_tx(byte tx_byte);
+byte LCD_command_tx_bit_bash(byte tx_byte);
 byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);

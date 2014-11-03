@@ -51,6 +51,8 @@ ISR(INT1_vect)
 
 ISR(TIMER0_OVF_vect) {
 	//drawFrameBuffer();
+
+	checkBatVoltage();
 }
 
 
@@ -62,18 +64,20 @@ int main(void)
 	setup();
 	clearScreen();
 	clearFrameBuffer();
+	PWM_VALUE(0xFF);
 
 	// Initialise variables.
 	byte local_button_state[NUM_BUTTONS];
 	byte collision_state = FALSE;
 	byte row = INITIAL_CURSOR_ROW, col = INITIAL_CURSOR_COL;
 	byte pwm_value = OFF;
-	PWM_VALUE(pwm_value);
 	byte screen_inverted = FALSE;
 	
+	
+
 	// Create a state machine based on the button values.
 	while (TRUE) {
-		checkBatVoltage();
+		
 		
 		// Slow down the game for the user.
 		_delay_ms(GAME_LOOP_DELAY);
@@ -163,6 +167,7 @@ int main(void)
 				collision_state = checkForCollision(row,col);
 			}
 			addPixelToFrameBuffer(row, col, ON);
+			drawFrameBuffer();
 		}
 	}
 }
