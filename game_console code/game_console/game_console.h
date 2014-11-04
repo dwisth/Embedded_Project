@@ -121,10 +121,10 @@ DESCRIPTION:
 #define MOSI_SET(STATE) 		SET(PORTB,_BV(PB5),STATE)
 #define LCD_RST_SET(STATE) 		SET(PORTB,_BV(PB3),~STATE)
 
-// Enable the SPI bus as master with fastest clock rate.
-#define SPI_ENABLE  			SET(SPCR,( _BV(SPE)|_BV(MSTR) ),ON)
+// Enable the SPI bus as master with fastest clock rate in SPI mode 3.
+#define SPI_ENABLE  			SET(SPCR,( (_BV(SPE))|(_BV(MSTR))|(_BV(CPOL))|(_BV(CPHA)) ),ON)
 #define SPI_SEND_DATA(DATA)		SPDR = DATA
-#define SPI_SEND_DATA_COMPLETE 	(SPSR & _BV(SPIF))
+#define SPI_SEND_DATA_COMPLETE 	(SPSR & (_BV(SPIF)))
 #define SPI_RECEIVE_DATA		SPDR
 
 /* FRAM COMMANDS */
@@ -134,15 +134,11 @@ DESCRIPTION:
 #define FRAM_WRITE_DISABLE				0x04
 #define FRAM_READ_STATUS_REG			0x05
 #define FRAM_WRITE_STATUS_REG			0x01
-#define FRAM_READ_MEMORY_DATA(ADDRESS_MSB) 		(0x03 | (ADDRESS_MSB*0x08) )
-#define FRAM_WRITE_MEMORY_DATA(ADDRESS_MSB) 	(0x02 | (ADDRESS_MSB*0x08) )
+#define FRAM_READ_MEMORY_DATA 			0x03
+#define FRAM_WRITE_MEMORY_DATA	 		0x02
 
-#define FRAM_FRAME_BUFFER_START_MSB 	0
+#define FRAM_FRAME_BUFFER_START_MSB 	0x00
 #define FRAM_FRAME_BUFFER_START_LSB 	0x00
-
-#define FRAM_WRITE 0
-#define FRAM_READ  1
-
 
 /* LCD MACROS */
 
@@ -215,8 +211,8 @@ byte clearFrameBuffer();
 void copyButtonState(byte src[NUM_BUTTONS], byte dst[NUM_BUTTONS]);
 void checkBatVoltage();
 byte checkForCollision(byte row, byte col);
-byte FRAM_read_byte (byte address_msb, byte address_byte);
-void FRAM_write_byte(byte address_msb, byte address_byte, byte tx_byte);
+void FRAM_write_byte(byte address_high, byte address_low, byte tx_byte);
+byte FRAM_read_byte(byte address_high, byte address_low);
 byte FRAM_read_sr();
 void FRAM_write_sr(byte cmd);
 void FRAM_write_enable();
