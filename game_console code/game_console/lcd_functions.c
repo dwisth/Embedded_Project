@@ -135,6 +135,72 @@ byte checkForCollision(byte row, byte col) {
 /*
 	Send a data byte to the LCD.
 */
+byte LCD_data_tx(byte tx_byte) {
+
+	LCD_CS_SET(HIGH);
+	LCD_DATA;
+	SPI_SEND_DATA(tx_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	LCD_CS_SET(LOW);
+
+	return TRUE;
+}
+
+/*
+	Send a command byte to the LCD.
+*/
+byte LCD_command_tx(byte tx_byte)
+{
+	LCD_CS_SET(HIGH);
+	LCD_COMMAND;
+	SPI_SEND_DATA(tx_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	LCD_CS_SET(LOW);
+
+	return TRUE;
+}
+
+/*
+	Initialise the LCD display using a sequence defined in the LCD-DOGS 102-6E datasheet.
+*/
+byte LCD_initialise()
+{
+	LCD_command_tx(0x40); // Display start line 0.
+	LCD_command_tx(0xA1); // SEG reverse
+	LCD_command_tx(0xC0); // Normal COM0~COM69
+	LCD_command_tx(0xA4); // Disable -> Set all pixels to ON.
+	LCD_command_tx(0xA6); // Display inverse off.	
+	_delay_ms(120);
+	LCD_command_tx(0xA2); // LCD bias ratio A2/A3
+	LCD_command_tx(0x2F); // Set power control 28..2F
+	LCD_command_tx(0x27); // Set VLCD resistor ratio 20..27
+	LCD_command_tx(0x81); // Set electronic volume
+	LCD_command_tx(0x10); // Set electronic volume 00..3F
+	LCD_command_tx(0xFA); // Set advanced program control.
+	LCD_command_tx(0x90); // Set advanced program control x00100yz yz column wrap X temp comp.
+	LCD_command_tx(0xAF); // Display ON.
+	return(TRUE);
+}
+
+void writeNumToScreen(byte num) {
+	select_page(0);
+	select_column(INITIAL_CURSOR_COL);
+	LCD_data_tx(ON);
+
+	select_column(INITIAL_CURSOR_COL+1);
+	LCD_data_tx(OFF);
+
+	select_column(INITIAL_CURSOR_COL+2);
+	LCD_data_tx(num);
+
+	select_column(INITIAL_CURSOR_COL+3);
+	LCD_data_tx(OFF);
+
+	select_column(INITIAL_CURSOR_COL+4);
+	LCD_data_tx(ON);
+}
+
+/*
 byte LCD_data_tx_bit_bash(byte tx_byte)
 {
 	byte tx_processed;
@@ -161,32 +227,6 @@ byte LCD_data_tx_bit_bash(byte tx_byte)
 	LCD_CS_SET(LOW);
 	return(TRUE);
 }
-
-byte LCD_data_tx(byte tx_byte) {
-
-	LCD_CS_SET(HIGH);
-	LCD_DATA;
-	SPI_SEND_DATA(tx_byte);
-	while (!SPI_SEND_DATA_COMPLETE){};
-	LCD_CS_SET(LOW);
-
-	return TRUE;
-}
-
-/*
-	Send a command byte to the LCD.
-*/
-byte LCD_command_tx(byte tx_byte)
-{
-	LCD_CS_SET(HIGH);
-	LCD_COMMAND;
-	SPI_SEND_DATA(tx_byte);
-	while (!SPI_SEND_DATA_COMPLETE){};
-	LCD_CS_SET(LOW);
-
-	return TRUE;
-}
-
 byte LCD_command_tx_bit_bash(byte tx_byte)
 {
 	byte tx_processed;
@@ -214,25 +254,4 @@ byte LCD_command_tx_bit_bash(byte tx_byte)
 	return(TRUE);
 
 }
-
-/*
-	Initialise the LCD display using a sequence defined in the LCD-DOGS 102-6E datasheet.
 */
-byte LCD_initialise()
-{
-	LCD_command_tx(0x40); // Display start line 0.
-	LCD_command_tx(0xA1); // SEG reverse
-	LCD_command_tx(0xC0); // Normal COM0~COM69
-	LCD_command_tx(0xA4); // Disable -> Set all pixels to ON.
-	LCD_command_tx(0xA6); // Display inverse off.	
-	_delay_ms(120);
-	LCD_command_tx(0xA2); // LCD bias ratio A2/A3
-	LCD_command_tx(0x2F); // Set power control 28..2F
-	LCD_command_tx(0x27); // Set VLCD resistor ratio 20..27
-	LCD_command_tx(0x81); // Set electronic volume
-	LCD_command_tx(0x10); // Set electronic volume 00..3F
-	LCD_command_tx(0xFA); // Set advanced program control.
-	LCD_command_tx(0x90); // Set advanced program control x00100yz yz column wrap X temp comp.
-	LCD_command_tx(0xAF); // Display ON.
-	return(TRUE);
-}

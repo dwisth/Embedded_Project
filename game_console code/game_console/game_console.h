@@ -99,18 +99,6 @@ DESCRIPTION:
 
 /* SET UP SPI INTERFACE */
 
-/*
-#define CS_LCD PB1
-#define CD_LCD PB4
-#define MOSI PB5
-#define MISO PB6
-#define SCK PB7
-#define RST_LCD PB3
-#define WP_FRAM PD4
-#define CS_FRAM PD5
-#define HOLD_FRAM PD6
-*/
-
 // Pin directions
 #define LCD_CS_DIR(DIR) 	SET(DDRB,_BV(PB1), DIR)
 #define LCD_CD_DIR(DIR) 	SET(DDRB,_BV(PB4), DIR)
@@ -137,6 +125,23 @@ DESCRIPTION:
 #define SPI_ENABLE  			SET(SPCR,( _BV(SPE)|_BV(MSTR) ),ON)
 #define SPI_SEND_DATA(DATA)		SPDR = DATA
 #define SPI_SEND_DATA_COMPLETE 	(SPSR & _BV(SPIF))
+#define SPI_RECEIVE_DATA		SPDR
+
+/* FRAM COMMANDS */
+
+// Note: There is 9 bit FRAM addresses!
+#define FRAM_WRITE_ENABLE 				0x06
+#define FRAM_WRITE_DISABLE				0x04
+#define FRAM_READ_STATUS_REG			0x05
+#define FRAM_WRITE_STATUS_REG			0x01
+#define FRAM_READ_MEMORY_DATA(ADDRESS_MSB) 		(0x03 | (ADDRESS_MSB*0x08) )
+#define FRAM_WRITE_MEMORY_DATA(ADDRESS_MSB) 	(0x02 | (ADDRESS_MSB*0x08) )
+
+#define FRAM_FRAME_BUFFER_START_MSB 	0
+#define FRAM_FRAME_BUFFER_START_LSB 	0x00
+
+#define FRAM_WRITE 0
+#define FRAM_READ  1
 
 
 /* LCD MACROS */
@@ -196,9 +201,9 @@ DESCRIPTION:
 
 void setup();
 byte LCD_data_tx(byte tx_byte);
-byte LCD_data_tx_bit_bash(byte tx_byte);
+//byte LCD_data_tx_bit_bash(byte tx_byte);
 byte LCD_command_tx(byte tx_byte);
-byte LCD_command_tx_bit_bash(byte tx_byte);
+//byte LCD_command_tx_bit_bash(byte tx_byte);
 byte LCD_initialise();
 byte select_page(byte page);
 byte select_column(byte col);
@@ -210,3 +215,11 @@ byte clearFrameBuffer();
 void copyButtonState(byte src[NUM_BUTTONS], byte dst[NUM_BUTTONS]);
 void checkBatVoltage();
 byte checkForCollision(byte row, byte col);
+byte FRAM_read_byte (byte address_msb, byte address_byte);
+void FRAM_write_byte(byte address_msb, byte address_byte, byte tx_byte);
+byte FRAM_read_sr();
+void FRAM_write_sr(byte cmd);
+void FRAM_write_enable();
+
+
+void writeNumToScreen(byte num);

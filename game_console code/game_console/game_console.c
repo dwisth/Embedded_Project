@@ -52,7 +52,7 @@ ISR(INT1_vect)
 ISR(TIMER0_OVF_vect) {
 	//drawFrameBuffer();
 
-	checkBatVoltage();
+	//checkBatVoltage();
 }
 
 
@@ -64,7 +64,7 @@ int main(void)
 	setup();
 	clearScreen();
 	clearFrameBuffer();
-	PWM_VALUE(0xFF);
+	
 
 	// Initialise variables.
 	byte local_button_state[NUM_BUTTONS];
@@ -73,11 +73,51 @@ int main(void)
 	byte pwm_value = OFF;
 	byte screen_inverted = FALSE;
 	
+	PWM_VALUE(pwm_value);
+
+	/* ~~~~~~~~~~~~~~~~ BEGIN TEST CODE  ~~~~~~~~~~~~~~~~~~~~~~ */
+
+	BAT_LOW_LED(OFF);
+
+	byte tx_byte, rx_byte = OFF;;
+	while (TRUE) {
+		tx_byte = ON;
+
+		rx_byte = FRAM_read_sr();
+
+		writeNumToScreen(rx_byte);
+
+		_delay_ms(GAME_LOOP_DELAY);
+
+/*
+		FRAM_write_byte(FRAM_FRAME_BUFFER_START_MSB, FRAM_FRAME_BUFFER_START_LSB, tx_byte);
+		rx_byte = FRAM_read_byte(FRAM_FRAME_BUFFER_START_MSB, FRAM_FRAME_BUFFER_START_LSB);
+
+		BAT_LOW_LED(rx_byte);
+
+		writeNumToScreen(rx_byte);
+
+		_delay_ms(GAME_LOOP_DELAY);
+		_delay_ms(GAME_LOOP_DELAY);
+		_delay_ms(GAME_LOOP_DELAY);
+		_delay_ms(GAME_LOOP_DELAY);
+		_delay_ms(GAME_LOOP_DELAY);
+
+		tx_byte = OFF;
+		FRAM_write_byte(FRAM_FRAME_BUFFER_START_MSB, FRAM_FRAME_BUFFER_START_LSB, tx_byte);
+		rx_byte = FRAM_read_byte(FRAM_FRAME_BUFFER_START_MSB, FRAM_FRAME_BUFFER_START_LSB);
+
+		BAT_LOW_LED(rx_byte);
+
+		writeNumToScreen(rx_byte);
+*/
+		
+	}
 	
+	/* ~~~~~~~~~~~~~~~~ END TEST CODE ~~~~~~~~~~~~~~~~~~~~~~ */
 
 	// Create a state machine based on the button values.
 	while (TRUE) {
-		
 		
 		// Slow down the game for the user.
 		_delay_ms(GAME_LOOP_DELAY);
@@ -202,4 +242,72 @@ void checkBatVoltage()
 	} else {
 		BAT_LOW_LED(OFF);
 	}
+}
+
+
+
+/*
+	Send a data byte to the FRAM and receive a byte at the same time.
+*/
+void FRAM_write_byte(byte address_msb, byte address_byte, byte tx_byte) {
+	
+	FRAM_CS_SET(HIGH);
+
+	SPI_SEND_DATA(FRAM_WRITE_MEMORY_DATA(address_msb));
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	SPI_SEND_DATA(address_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	SPI_SEND_DATA(tx_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	FRAM_CS_SET(LOW);
+}
+
+byte FRAM_read_byte(byte address_msb, byte address_byte) {
+		
+	FRAM_CS_SET(HIGH);
+
+	SPI_SEND_DATA(FRAM_READ_MEMORY_DATA(address_msb));
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	SPI_SEND_DATA(address_byte);
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	// Send a dummy byte to start the SPI bus.
+	SPI_SEND_DATA(0x00);
+	while (!SPI_SEND_DATA_COMPLETE){};
+
+	FRAM_CS_SET(LOW);
+
+	return SPI_RECEIVE_DATA;
+}
+
+void FRAM_write_enable() {
+	FRAM_CS_SET(HIGH);
+	SPI_SEND_DATA(FRAM_WRITE_ENABLE);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	FRAM_CS_SET(LOW);
+}
+
+void FRAM_write_sr(byte cmd) {
+	FRAM_CS_SET(HIGH);
+	SPI_SEND_DATA(FRAM_WRITE_STATUS_REG);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	SPI_SEND_DATA(cmd);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	FRAM_CS_SET(LOW);
+}
+
+byte FRAM_read_sr() {
+	FRAM_CS_SET(HIGH);
+	SPI_SEND_DATA(FRAM_READ_STATUS_REG);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	// Send dummy byte to enable SPI.
+	SPI_SEND_DATA(0x00);
+	while (!SPI_SEND_DATA_COMPLETE){};
+	FRAM_CS_SET(LOW);
+
+	return SPI_RECEIVE_DATA;
 }
